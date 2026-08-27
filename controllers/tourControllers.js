@@ -113,6 +113,7 @@ exports.getTourStats = async (req, res) => {
           avgPrice: { $avg: '$price' },
           minPrice: { $min: '$price' },
           maxPrice: { $max: '$price' },
+          // tours: { $push: '$name' },
         },
       },
       {
