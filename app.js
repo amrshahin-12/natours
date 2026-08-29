@@ -5,6 +5,8 @@ const fs = require('fs');
 const morgan = require('morgan');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const AppError = require('./utils/appError');
+const { errorMiddleware } = require('./controllers/errorController');
 
 //middleware
 if (process.env.NODE_ENV === 'development') {
@@ -19,11 +21,10 @@ app.use('/api/v1/users', userRouter);
 
 //.all => for all http verbs
 //'*': Matches any path/URL string on your server
-app.all('*', (req, res) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `can't find ${req.originalUrl}`,
-  });
+app.all('*', (req, res, next) => {
+  next(new AppError(`can't find ${req.originalUrl}`, 404));
 });
+
+app.use(errorMiddleware);
 
 module.exports = app;
