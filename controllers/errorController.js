@@ -9,7 +9,6 @@ const handleDuplicateKeyDB = (err) => {
   const match = err.errmsg.match(/"([^"]*)"/);
   const extractedValue = match ? match[1] : null;
   const message = `Duplicate key value: ${extractedValue}. please use another value `;
-  // const message = err.errmsg;
   return new AppError(message, 400);
 };
 
