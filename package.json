@@ -14,6 +14,7 @@
     "argon2": "^0.45.1",
     "dotenv": "^17.4.2",
     "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^5.13.23",
     "morgan": "^1.11.0",
     "validator": "^13.15.35"
