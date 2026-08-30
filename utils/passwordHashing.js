@@ -8,4 +8,4 @@ const HASH_OPTIONS = {
 };
 
 exports.hash = (plainPassword) => argon2.hash(plainPassword, HASH_OPTIONS);
-// exports.verify = (hash, plainPassword) => argon2.verify(hash, plainPassword);
+exports.verify = (hash, plainPassword) => argon2.verify(hash, plainPassword);
