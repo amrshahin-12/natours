@@ -5,6 +5,22 @@ const handleCastErrorDB = (err) => {
   return new AppError(message, 400);
 };
 
+const handleDuplicateKeyDB = (err) => {
+  const match = err.errmsg.match(/"([^"]*)"/);
+  const extractedValue = match ? match[1] : null;
+  const message = `Duplicate key value: ${extractedValue}. please use another value `;
+  // const message = err.errmsg;
+  return new AppError(message, 400);
+};
+
+const handleValidationDB = (err) => {
+  const Errors = Object.values(err.errors); //object Of Error Objects
+  const messages = Object.values(Errors).map((error) => error.message); //array of messages
+  const message = messages.join(', ');
+  console.log(message);
+  return new AppError(message, 400);
+};
+
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -42,6 +58,8 @@ exports.errorMiddleware = (err, req, res, next) => {
     //so we can reassign 'error' and leave 'err'
     let error = err;
     if (err.name === 'CastError') error = handleCastErrorDB(err);
+    if (err.name === 'ValidationError') error = handleValidationDB(err);
+    if (err.code === 11000) error = handleDuplicateKeyDB(err);
     sendErrorProd(error || err, res);
   }
 };
