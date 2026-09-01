@@ -36,7 +36,33 @@ const userSchema = new mongoose.Schema({
     required: [true, 'please confirm the password!'],
     select: false,
   },
+  passwordChangedAt: {
+    type: Date,
+    default: '2026-08-01',
+  },
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user',
+  },
 });
+
+userSchema.methods.changesPasswordAfter = function (JWTTimestamp) {
+  // .getTime() returns time in miliseconds
+  // "JWT iat" is in seconds so we convert passwordChangedAtTimestamp also to seconds
+  const passwordChangedAtTimestamp = parseInt(
+    this.passwordChangedAt.getTime() / 1000,
+    10,
+  );
+  if (this.passwordChangedAt) {
+    return passwordChangedAtTimestamp > JWTTimestamp;
+  }
+
+  //false => didn't change
+  //true => changed after
+  //default is didn't change
+  return false;
+};
 
 //hashing passwords
 userSchema.pre('save', async function (next) {

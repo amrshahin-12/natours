@@ -1,5 +1,15 @@
 const AppError = require('../utils/appError');
 
+const handleInvalidJWT = (err) => {
+  const message = `${err.message}, please login again!`;
+  return new AppError(message, 401);
+};
+
+const handleExpiredJWT = (err) => {
+  const message = `${err.message}, please login again!`;
+  return new AppError(message, 401);
+};
+
 const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}`;
   return new AppError(message, 400);
@@ -59,6 +69,9 @@ exports.errorMiddleware = (err, req, res, next) => {
     if (err.name === 'CastError') error = handleCastErrorDB(err);
     if (err.name === 'ValidationError') error = handleValidationDB(err);
     if (err.code === 11000) error = handleDuplicateKeyDB(err);
+    if (err.name === 'JsonWebTokenError') error = handleInvalidJWT(err);
+    if (err.name === 'TokenExpiredError') error = handleExpiredJWT(err);
+
     sendErrorProd(error || err, res);
   }
 };

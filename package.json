@@ -8,7 +8,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon ./server.js"
+    "start:dev": "cross-env NODE_ENV=development nodemon ./server.js",
+    "start:prod": "cross-env NODE_ENV=production nodemon ./server.js"
   },
   "dependencies": {
     "argon2": "^0.45.1",

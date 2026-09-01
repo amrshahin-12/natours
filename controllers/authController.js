@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const util = require('util');
 const { User } = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const passwordHashing = require('../utils/passwordHashing');
@@ -16,6 +17,8 @@ exports.signUp = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    passwordChangedAt: req.body.passwordChangedAt,
+    role: req.body.role,
   });
 
   const token = signToken(newUser._id);
@@ -59,3 +62,57 @@ exports.login = catchAsync(async (req, res, next) => {
     token,
   });
 });
+
+//to protect a route
+exports.protect = catchAsync(async (req, res, next) => {
+  //1) check if there's token and get it
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token) {
+    return next(new AppError('please log in to get access!', 401));
+  }
+
+  //2) verify token
+  const decoded = await util.promisify(jwt.verify)(
+    token,
+    process.env.JWT_SECRET,
+  );
+
+  //3) check if user still exists
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError('token belongs to a user that no longer exists!', 401),
+    );
+  }
+
+  //4) check if user changed password after the token was issued
+  if (currentUser.changesPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed password! please login again.'),
+    );
+  }
+
+  //grant access to protected route
+  req.user = currentUser; //custom property
+  console.log(req.user);
+  next();
+});
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    //roles ['admin', 'lead-guide']
+    //the person's role is stored on "req.user" since .protect is called before this MW
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action!', 403),
+      );
+    }
+    next();
+  };
+};
