@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'A user must have a password'],
     minlength: 8,
-    // select: false,
+    select: false,
   },
   passwordConfirm: {
     type: String,
@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
       message: 'passwords must be identical!',
     },
     required: [true, 'please confirm the password!'],
-    // select: false,
+    select: false,
   },
   passwordChangedAt: {
     type: Date,

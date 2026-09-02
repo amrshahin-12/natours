@@ -8,6 +8,7 @@ const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
 
 const signToken = (ID) => {
+  console.log(ID);
   return jwt.sign({ id: ID }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
@@ -24,7 +25,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
 
   const token = signToken(newUser._id);
 
-  res.status(200).json({
+  res.status(201).json({
     status: 'success',
     token,
     data: {
@@ -197,6 +198,47 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   //5) update password changed at property => via middleware
   //6) log user in, send JWT
+  const token = signToken(user._id);
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+});
+
+//for logged in user, no password reset token
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  //1) get user
+  const user = await User.findById(req.user.id).select('+password');
+
+  //2) check if POSTed current password is correct
+  if (
+    !(await passwordHashing.verify(user.password, req.body.currentPassword))
+  ) {
+    return next(
+      new AppError('currentPassword is incorrect! please try again', 401),
+    );
+  }
+
+  //3) check if new password is diff than old one
+  const isSamePassword = await passwordHashing.verify(
+    user.password,
+    req.body.password,
+  );
+  if (isSamePassword) {
+    return next(
+      new AppError(
+        'New password must be different from the current password.',
+        400,
+      ),
+    );
+  }
+
+  //4) if so update password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+
+  //5) log user in
   const token = signToken(user._id);
   res.status(200).json({
     status: 'success',

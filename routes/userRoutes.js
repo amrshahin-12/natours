@@ -16,6 +16,10 @@ router
   .get(userController.getAllUsers)
   .post(userController.createUser);
 
+router
+  .route('/update-password')
+  .patch(authController.protect, authController.updatePassword);
+
 router.route('/reset-password/:token').patch(authController.resetPassword);
 
 router.route('/:id').get(userController.getUser);
