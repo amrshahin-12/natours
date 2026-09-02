@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const { User } = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
@@ -31,3 +32,27 @@ exports.getUser = async (req, res, next) => {
     data: { user },
   });
 };
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  //1) error if user POSTs password data
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(new AppError('this route is not for password updates!'));
+  }
+
+  //2) filtered out unwanted fields
+  const filteredData = _.pick(req.body, ['name', 'email']);
+
+  //3) update user documen
+  const options = { new: true, validators: true };
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user.id,
+    filteredData,
+    options,
+  );
+  res.status(200).json({
+    status: 'success',
+    data: {
+      updatedUser,
+    },
+  });
+});
