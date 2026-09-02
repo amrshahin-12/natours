@@ -8,9 +8,30 @@ const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
 
 const signToken = (ID) => {
-  console.log(ID);
   return jwt.sign({ id: ID }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+};
+
+const createSendToken = (user, statusCode, res, data) => {
+  const token = signToken(user._id);
+
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    ),
+    httpOnly: true, //cookie can't be accessed or modified by browser
+  };
+
+  if (process.env.NODE_ENV === 'production') {
+    cookieOptions.secure = true; //send over secure connections like https
+  }
+  res.cookie('jwt', token, cookieOptions);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    ...(data && { data }), //making it optional
   });
 };
 
@@ -23,18 +44,13 @@ exports.signUp = catchAsync(async (req, res, next) => {
     role: req.body.role,
   });
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: {
-        name: newUser.name,
-        email: newUser.email,
-      },
+  const sentData = {
+    user: {
+      name: newUser.name,
+      email: newUser.email,
     },
-  });
+  };
+  createSendToken(newUser, 201, res, sentData);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -58,11 +74,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('email or password is incorrect!', 401));
   }
   //3) if valid, send token to client
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
 
 //to protect a route
@@ -198,11 +210,8 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   //5) update password changed at property => via middleware
   //6) log user in, send JWT
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+
+  createSendToken(user, 200, res);
 });
 
 //for logged in user, no password reset token
@@ -239,9 +248,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   //5) log user in
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
