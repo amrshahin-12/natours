@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const crypto = require('crypto');
 const passwordHashing = require('../utils/passwordHashing');
 
 const userSchema = new mongoose.Schema({
@@ -38,7 +39,13 @@ const userSchema = new mongoose.Schema({
   },
   passwordChangedAt: {
     type: Date,
-    default: '2026-08-01',
+    // default: '2026-08-01',
+  },
+  passwordResetToken: {
+    type: String,
+  },
+  passwordResetExpires: {
+    type: Date,
   },
   role: {
     type: String,
@@ -47,29 +54,55 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+//hashing passwords
+userSchema.pre('save', async function (next) {
+  //only run this func if password has been modified or freshly created
+  if (!this.isModified('password')) return next();
+
+  this.password = await passwordHashing.hash(this.password);
+  this.passwordConfirm = undefined;
+  next();
+});
+
+//updating passwordChangedAt property
+userSchema.pre('save', function (next) {
+  //return if password isn't modified or it's new doc
+  if (!this.isModified('password') || this.isNew) return next();
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 userSchema.methods.changesPasswordAfter = function (JWTTimestamp) {
+  //safety measure, if user didn't change password ever
+  //passwordChangedAt is undefiend
+  if (!this.passwordChangedAt) {
+    return false;
+  }
+
   // .getTime() returns time in miliseconds
   // "JWT iat" is in seconds so we convert passwordChangedAtTimestamp also to seconds
   const passwordChangedAtTimestamp = parseInt(
     this.passwordChangedAt.getTime() / 1000,
     10,
   );
-  if (this.passwordChangedAt) {
-    return passwordChangedAtTimestamp > JWTTimestamp;
-  }
 
+  return passwordChangedAtTimestamp > JWTTimestamp;
   //false => didn't change
   //true => changed after
-  //default is didn't change
-  return false;
 };
 
-//hashing passwords
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await passwordHashing.hash(this.password);
-  this.passwordConfirm = undefined;
-  next();
-});
+userSchema.methods.createPasswordResetToken = function () {
+  //generate random token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set the expiry period to 10 minutes from now
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  //return plain reset token to send it via email or wtv
+  return resetToken;
+};
 
 exports.User = mongoose.model('User', userSchema);

@@ -48,3 +48,13 @@ process.on('unhandledRejection', (err) => {
     process.exit(1); //then we shut down
   });
 });
+////////////
+// const passwordChangedAt = undefined;
+// const passwordChangedAtTimestamp = parseInt(
+//   this.passwordChangedAt.getTime() / 1000,
+//   10,
+// );
+// if (this.passwordChangedAt) {
+//   console.log('in if', passwordChangedAtTimestamp);
+// }
+// console.log('out if', passwordChangedAtTimestamp);
