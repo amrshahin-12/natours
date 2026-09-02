@@ -72,11 +72,6 @@ userSchema.pre('save', function (next) {
   next();
 });
 
-//check if new password is diff than old one
-// userSchema.pre('save', function (next) {
-//   const isSamePassword = passwordHashing.verify()
-// });
-
 userSchema.methods.changesPasswordAfter = function (JWTTimestamp) {
   //safety measure, if user didn't change password ever
   //passwordChangedAt is undefiend

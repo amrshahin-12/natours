@@ -168,22 +168,35 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   const user = await User.findOne({
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gte: Date.now() },
-  });
+  }).select('+password');
 
-  //2) if token hasn't expired, and there's user, set the new password
+  //2) check if token hasn't expired, and there's user
   if (!user) {
     return next(new AppError('Token is invalid or has expired!', 400));
   }
+  //3) check if new password is diff than old one
+  const isSamePassword = await passwordHashing.verify(
+    user.password,
+    req.body.password,
+  );
+  if (isSamePassword) {
+    return next(
+      new AppError(
+        'New password must be different from the current password.',
+        400,
+      ),
+    );
+  }
+
+  //4) set the new password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
   await user.save(); //we want the validators
 
-  //3) check if new password is diff than old one
-
-  //3) update password changed at property => via middleware
-  //4) log user in, send JWT
+  //5) update password changed at property => via middleware
+  //6) log user in, send JWT
   const token = signToken(user._id);
   res.status(200).json({
     status: 'success',
