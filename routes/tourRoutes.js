@@ -3,8 +3,11 @@ const express = require('express');
 const router = express.Router();
 const tourController = require('../controllers/tourControllers');
 const authController = require('../controllers/authController');
+const reviewRouter = require('./reviewRoutes');
 
 // router.param('id', tourController.checkID);
+
+router.use('/:tourId/reviews', reviewRouter);
 
 router
   .route('/')

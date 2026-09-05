@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const { User } = require('./userModel');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -76,11 +77,38 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
-  },
-  {
     toObject: { virtuals: true },
   },
 );
@@ -89,7 +117,15 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+//virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review', // model to populate from
+  foreignField: 'tour', // field on Review that references Tour
+  localField: '_id', // field on Tour that Review.tour points to
+});
+
 //document MW
+
 // tourSchema.pre('save', function (next) {
 //   next();
 // });
@@ -101,6 +137,14 @@ tourSchema.virtual('durationWeeks').get(function () {
 //query MW
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
   next();
 });
 

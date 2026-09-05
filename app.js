@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
 
 const app = express(); //returns bunch of methods
@@ -8,6 +9,7 @@ const fs = require('fs');
 const morgan = require('morgan');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 const AppError = require('./utils/appError');
 const { errorMiddleware } = require('./controllers/errorController');
 
@@ -32,10 +34,24 @@ app.use('/api', limiter); //apply it only to "/api"
 app.use(express.json());
 
 //data sanitization against  NoSQL query injection
-app.use(mongoSanitize);
+app.use(mongoSanitize());
 
 //data sanitization against  XSS
 //TO:DO
+
+//prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsAverage',
+      'ratingsQuantity',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  }),
+);
 
 //to access static files that is not in our routes
 app.use(express.static(`${__dirname}/public`));
@@ -43,6 +59,7 @@ app.use(express.static(`${__dirname}/public`));
 //routers
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 //.all => for all http verbs
 //'*': Matches any path/URL string on your server

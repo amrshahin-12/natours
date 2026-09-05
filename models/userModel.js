@@ -3,61 +3,67 @@ const validator = require('validator');
 const crypto = require('crypto');
 const passwordHashing = require('../utils/passwordHashing');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    trim: true,
-    required: [true, 'A user must have a name'],
-    maxlength: [40, 'A user name must be at most 40 chars'],
-  },
-  email: {
-    type: String,
-    validate: [validator.isEmail, 'please provide valid email address'],
-    lowercase: true,
-    required: [true, 'A user must have an Email'],
-    unique: [true, 'Email must be unique'],
-  },
-  photo: {
-    type: String,
-  },
-  password: {
-    type: String,
-    required: [true, 'A user must have a password'],
-    minlength: 8,
-    select: false,
-  },
-  passwordConfirm: {
-    type: String,
-    validate: {
-      validator: function (pass) {
-        return this.password === pass;
-      },
-      message: 'passwords must be identical!',
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      trim: true,
+      required: [true, 'A user must have a name'],
+      maxlength: [40, 'A user name must be at most 40 chars'],
     },
-    required: [true, 'please confirm the password!'],
-    select: false,
+    email: {
+      type: String,
+      validate: [validator.isEmail, 'please provide valid email address'],
+      lowercase: true,
+      required: [true, 'A user must have an Email'],
+      unique: [true, 'Email must be unique'],
+    },
+    photo: {
+      type: String,
+    },
+    password: {
+      type: String,
+      required: [true, 'A user must have a password'],
+      minlength: 8,
+      select: false,
+    },
+    passwordConfirm: {
+      type: String,
+      validate: {
+        validator: function (pass) {
+          return this.password === pass;
+        },
+        message: 'passwords must be identical!',
+      },
+      required: [true, 'please confirm the password!'],
+      select: false,
+    },
+    passwordChangedAt: {
+      type: Date,
+      // default: '2026-08-01',
+    },
+    passwordResetToken: {
+      type: String,
+    },
+    passwordResetExpires: {
+      type: Date,
+    },
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      default: 'user',
+    },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
   },
-  passwordChangedAt: {
-    type: Date,
-    // default: '2026-08-01',
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
-  passwordResetToken: {
-    type: String,
-  },
-  passwordResetExpires: {
-    type: Date,
-  },
-  role: {
-    type: String,
-    enum: ['user', 'guide', 'lead-guide', 'admin'],
-    default: 'user',
-  },
-  active: {
-    type: Boolean,
-    default: true,
-    select: false,
-  },
-});
+);
 
 //hashing passwords
 userSchema.pre('save', async function (next) {
