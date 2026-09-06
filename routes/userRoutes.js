@@ -25,6 +25,10 @@ router.delete('/deleteMe', authController.protect, userController.deleteMe);
 
 router.route('/reset-password/:token').patch(authController.resetPassword);
 
-router.route('/:id').get(userController.getUser);
+router
+  .route('/:id')
+  .get(userController.getUser)
+  .delete(userController.deleteUser)
+  .patch(userController.updateUser);
 
 module.exports = router;

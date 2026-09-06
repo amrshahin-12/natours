@@ -2,36 +2,18 @@ const _ = require('lodash');
 const { User } = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const factory = require('./handlerFactory');
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
-
-  res.status(200).json({
-    status: 'success',
-    results: users.length,
-    data: { users },
-  });
-});
+exports.getAllUsers = factory.getAll(User);
 
 exports.createUser = (req, res) => {
   res.status(500).json({
     status: 'error',
-    message: 'not yet implemented!',
+    message: 'This route is not defined!',
   });
 };
 
-exports.getUser = async (req, res, next) => {
-  const { email } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    return next(new AppError('No user found with that ID', 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: { user },
-  });
-};
+exports.getUser = factory.getOne(User);
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   //1) error if user POSTs password data
@@ -43,7 +25,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   const filteredData = _.pick(req.body, ['name', 'email']);
 
   //3) update user documen
-  const options = { new: true, validators: true };
+  const options = { new: true, runValidators: true };
   const updatedUser = await User.findByIdAndUpdate(
     req.user.id,
     filteredData,
@@ -64,3 +46,8 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     status: 'success',
   });
 });
+
+exports.deleteUser = factory.deleteOne(User); //for admin
+
+//DO NOT update password with this
+exports.updateUser = factory.updateOne(User); //for admin
