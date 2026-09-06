@@ -6,31 +6,24 @@ const authController = require('../controllers/authController');
 
 router.route('/signup').post(authController.signUp);
 router.route('/login').post(authController.login);
-
 router.route('/forgot-password').post(authController.forgotPassword);
+router.route('/reset-password/:token').patch(authController.resetPassword);
 
-// router.route('/getuser').post(userController.getUser); //********* */
+//to protect all comming routes
+router.use(authController.protect);
+
+router.patch('/update-password', authController.updatePassword);
+router.get('/me', userController.getMe, userController.getUser);
+router.patch('/updateMe', userController.updateMe);
+router.delete('/deleteMe', userController.deleteMe);
+
+//to restrict all comming protected routes
+router.use(authController.restrictTo('admin'));
 
 router
   .route('/')
   .get(userController.getAllUsers)
   .post(userController.createUser);
-
-router.get(
-  '/me',
-  authController.protect,
-  userController.getMe,
-  userController.getUser,
-);
-
-router
-  .route('/update-password')
-  .patch(authController.protect, authController.updatePassword);
-
-router.patch('/updateMe', authController.protect, userController.updateMe);
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
-
-router.route('/reset-password/:token').patch(authController.resetPassword);
 
 router
   .route('/:id')
