@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const slugify = require('slugify');
 const { User } = require('./userModel');
 
 const tourSchema = new mongoose.Schema(
@@ -13,6 +14,7 @@ const tourSchema = new mongoose.Schema(
       minlength: [10, 'A tour name must be at least 10 chars'],
       // validate: validator.isAlpha,
     },
+    slug: String,
     duration: {
       type: Number,
       required: [true, 'A tour must have a duration'],
@@ -113,6 +115,10 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
+// tourSchema.index({ price: 1 }); //single field
+tourSchema.index({ price: 1, ratingsAverage: -1 }); //compound
+tourSchema.index({ slug: 1 });
+
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
@@ -125,6 +131,10 @@ tourSchema.virtual('reviews', {
 });
 
 //document MW
+tourSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
 
 // tourSchema.pre('save', function (next) {
 //   next();
