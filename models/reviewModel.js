@@ -59,8 +59,8 @@ reviewSchema.statics.calcAverageRatings = async function (tourId) {
   // console.log(stats);
 
   await Tour.findByIdAndUpdate(tourId, {
-    ratingsAverage: stats[0].avgRating,
-    ratingsQuantity: stats[0].nRating,
+    ratingsAverage: stats[0] ? stats[0].avgRating : 0,
+    ratingsQuantity: stats[0] ? stats[0].nRating : 0,
   });
 };
 
@@ -87,7 +87,7 @@ reviewSchema.post(/^findOneAnd/, async function () {
   //this.rev => the review doc we attached to the query obj
   //this.rev.constructor => the model
   //statics are called on the model*
-  await this.rev.constructor.calcAverageRatings(this.rev.tour);
+  if (this.rev) await this.rev.constructor.calcAverageRatings(this.rev.tour);
 });
 
 exports.Review = mongoose.model('Review', reviewSchema);
