@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const { Tour } = require('./tourModel');
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -41,6 +42,30 @@ reviewSchema.pre(/^find/, function (next) {
   ];
   this.populate(options);
   next();
+});
+
+reviewSchema.statics.calcAverageRatings = async function (tourId) {
+  const stats = await this.aggregate([
+    { $match: { tour: tourId } },
+    {
+      $group: {
+        _id: '$tour', //here just for output, since we already filtered to one bucket
+        nRating: { $sum: 1 },
+        avgRating: { $avg: '$rating' },
+      },
+    },
+  ]);
+  //to persist it to the tours
+  // console.log(stats);
+  await Tour.findByIdAndUpdate(tourId, {
+    ratingsAverage: stats[0].avgRating,
+    ratingsQuantity: stats[0].nRating,
+  });
+};
+
+//"post" so the current review be in the collection before calculating
+reviewSchema.post('save', function () {
+  this.constructor.calcAverageRatings(this.tour);
 });
 
 exports.Review = mongoose.model('Review', reviewSchema);
