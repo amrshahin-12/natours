@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const { Tour } = require('./tourModel');
+// const AppError = require('../utils/appError');
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -34,6 +35,10 @@ const reviewSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+
+//unique here makes each combination of tour and user be unique
+//to make each user  make one rev on a tour
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
 
 reviewSchema.pre(/^find/, function (next) {
   const options = [
