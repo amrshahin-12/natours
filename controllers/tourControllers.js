@@ -87,3 +87,39 @@ exports.getMothlyPlan = catchAsync(async (req, res, next) => {
     data: { plan },
   });
 });
+
+// /tours-within/:distance/center/:latlng/unit/:unit
+// /tours-within/120/center/-66,11/unit/mi
+exports.getToursWithin = catchAsync(async (req, res, next) => {
+  const { distance, unit, latlng } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  if (!lat || !lng)
+    return next(
+      new AppError(
+        'Please provide latitude and longitude in format lat,lng',
+        400,
+      ),
+    );
+
+  //get radius in unit radians by dividing it by earth radius
+  let radius;
+  if (unit === 'mi') {
+    radius = distance / 3963.2;
+  } else if (unit === 'km') {
+    radius = distance / 6378.1;
+  } else {
+    return next(new AppError('Only valid units are km, mi.', 400));
+  }
+
+  const tours = await Tour.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
+  });
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      data: tours,
+    },
+  });
+});
