@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
@@ -13,7 +14,15 @@ const reviewRouter = require('./routes/reviewRoutes');
 const AppError = require('./utils/appError');
 const { errorMiddleware } = require('./controllers/errorController');
 
+//set template engine => pug
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
 //GLOBAL MIDDLEWARES
+
+//to access static files that is not in our routes
+app.use(express.static(path.join(__dirname, 'public')));
+
 //security HTTP headers
 app.use(helmet());
 
@@ -53,10 +62,14 @@ app.use(
   }),
 );
 
-//to access static files that is not in our routes
-app.use(express.static(`${__dirname}/public`));
-
 //routers
+app.get('/', (req, res) => {
+  res.status(200).render('base', {
+    tour: 'The forest hicker',
+    user: 'Amr',
+  });
+});
+
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
