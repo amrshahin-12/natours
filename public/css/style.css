@@ -542,6 +542,12 @@ body {
   position: relative;
   height: 65rem;
   margin-top: calc(0px - var(--section-rotate));
+  /* for leaflet */
+  /* this is div inside the section */
+    #map {
+    height: 100%; 
+    /* 100% of parent's (section-map) height */
+  }
 }
 
 #map {

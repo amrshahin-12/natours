@@ -25,7 +25,38 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 //security HTTP headers
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", 'https://unpkg.com'],
+        styleSrc: [
+          "'self'",
+          'https://unpkg.com',
+          'https://fonts.googleapis.com',
+          "'unsafe-inline'",
+        ],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: [
+          "'self'",
+          'data:',
+          'https://*.basemaps.cartocdn.com',
+          'https://unpkg.com',
+        ],
+        connectSrc: [
+          "'self'",
+          'https://*.basemaps.cartocdn.com',
+          'https://unpkg.com',
+        ],
+      },
+    },
+  }),
+);
+
+//scriptSrc => allows the Leaflet JS file to actually load
+//styleSrc => allows Leaflet's CSS file too
+//imgSrc => OSM tile images come from subdomains like a.tile.openstreetmap.org
 
 //development logging
 if (process.env.NODE_ENV === 'development') {
