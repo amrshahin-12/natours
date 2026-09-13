@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
+const cookieParser = require('cookie-parser');
 
 const app = express(); //returns bunch of methods
 const fs = require('fs');
@@ -30,7 +31,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", 'https://unpkg.com'],
+        scriptSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
         styleSrc: [
           "'self'",
           'https://unpkg.com',
@@ -48,6 +49,7 @@ app.use(
           "'self'",
           'https://*.basemaps.cartocdn.com',
           'https://unpkg.com',
+          'https://cdn.jsdelivr.net',
         ],
       },
     },
@@ -73,6 +75,9 @@ app.use('/api', limiter); //apply it only to "/api"
 
 //body parser, reading data from body into req.body
 app.use(express.json());
+
+//every incoming request gets a req.cookies object
+app.use(cookieParser());
 
 //data sanitization against  NoSQL query injection
 app.use(mongoSanitize());

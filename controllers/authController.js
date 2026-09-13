@@ -22,7 +22,6 @@ const createSendToken = (user, statusCode, res, data) => {
     ),
     httpOnly: true, //cookie can't be accessed or modified by browser
   };
-
   if (process.env.NODE_ENV === 'production') {
     cookieOptions.secure = true; //send over secure connections like https
   }
@@ -86,7 +85,11 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    //check if there's cookie for the token and get it
+    token = req.cookies.jwt;
   }
+
   if (!token) {
     return next(new AppError('please log in to get access!', 401));
   }
@@ -114,6 +117,39 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   //grant access to protected route
   req.user = currentUser; //custom property
+  next();
+});
+
+//only for rendered pages, no errors
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  //1) check if there's token and get it
+  let token;
+  //here the token will come from cookies only since it's for rendered pages
+  //, auth header is for API
+  if (req.cookies.jwt) {
+    //check if there's cookie for the token and get it
+    token = req.cookies.jwt;
+    //2) verify token
+    const decoded = await util.promisify(jwt.verify)(
+      token,
+      process.env.JWT_SECRET,
+    );
+
+    //3) check if user still exists
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+      return next();
+    }
+
+    //4) check if user changed password after the token was issued
+    if (currentUser.changesPasswordAfter(decoded.iat)) {
+      return next();
+    }
+
+    //there's a looged in user
+    res.locals.user = currentUser;
+    return next();
+  }
   next();
 });
 
