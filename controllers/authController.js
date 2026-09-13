@@ -76,6 +76,14 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'logged out', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
+
 //to protect a route
 exports.protect = catchAsync(async (req, res, next) => {
   //1) check if there's token and get it
@@ -121,37 +129,40 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 //only for rendered pages, no errors
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
-  //1) check if there's token and get it
-  let token;
+exports.isLoggedIn = async (req, res, next) => {
+  //1) check if there's token
   //here the token will come from cookies only since it's for rendered pages
   //, auth header is for API
   if (req.cookies.jwt) {
-    //check if there's cookie for the token and get it
-    token = req.cookies.jwt;
-    //2) verify token
-    const decoded = await util.promisify(jwt.verify)(
-      token,
-      process.env.JWT_SECRET,
-    );
+    try {
+      //check if there's cookie for the token and get it
+      //2) verify token
+      const decoded = await util.promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET,
+      );
 
-    //3) check if user still exists
-    const currentUser = await User.findById(decoded.id);
-    if (!currentUser) {
+      //3) check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
+
+      //4) check if user changed password after the token was issued
+      if (currentUser.changesPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      //there's a looged in user
+      res.locals.user = currentUser;
+      return next();
+    } catch (err) {
+      // invalid/malformed/expired token — just treat as logged out
       return next();
     }
-
-    //4) check if user changed password after the token was issued
-    if (currentUser.changesPasswordAfter(decoded.iat)) {
-      return next();
-    }
-
-    //there's a looged in user
-    res.locals.user = currentUser;
-    return next();
   }
   next();
-});
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
