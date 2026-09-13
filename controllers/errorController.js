@@ -30,39 +30,72 @@ const handleValidationDB = (err) => {
   return new AppError(message, 400);
 };
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    Error: err,
-    message: err.message,
-    stack: err.stack,
+const sendErrorDev = (err, req, res) => {
+  //checks whether the request came from your API or from a browser page view
+  //Natours app has two very different kinds of consumers hitting the same server
+  //1. API requests, /api/v1/####
+  //2. Rendered page requests,  /####
+  if (req.originalUrl.startsWith('/api')) {
+    //A) API
+    return res.status(err.statusCode).json({
+      status: err.status,
+      Error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  }
+  //B) Rendered website
+  console.error('ERROR!!!!!!', err);
+  res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: err.message,
   });
 };
 
-const sendErrorProd = (err, res) => {
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-    });
-  } else {
+const sendErrorProd = (err, req, res) => {
+  //A) API
+  if (req.originalUrl.startsWith('/api')) {
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    }
     //if it's unkown/ programming error, don't leak error details
-    //1) log error
+    // log error
     console.error('ERROR!!!!!!', err);
 
-    //2) send generic message to client
-    res.status(500).json({
+    // send generic message to client
+    return res.status(500).json({
       status: 'error',
       message: 'something went wrong!',
     });
   }
+
+  //B) Rendered website
+  if (err.isOperational) {
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
+    });
+  }
+  //if it's unkown/ programming error, don't leak error details
+  // log error
+  console.error('ERROR!!!!!!', err);
+
+  // send generic message to client
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: 'Please try again later!',
+  });
 };
+
 exports.errorMiddleware = (err, req, res, next) => {
   //set a default
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     //so we can reassign 'error' and leave 'err'
     let error = err;
@@ -72,6 +105,6 @@ exports.errorMiddleware = (err, req, res, next) => {
     if (err.name === 'JsonWebTokenError') error = handleInvalidJWT(err);
     if (err.name === 'TokenExpiredError') error = handleExpiredJWT(err);
 
-    sendErrorProd(error || err, res);
+    sendErrorProd(error || err, req, res);
   }
 };
