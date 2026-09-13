@@ -1,9 +1,8 @@
 /* eslint-disable */
-const mapContainer = document.getElementById('map');
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-if (mapContainer) {
-  const locations = JSON.parse(mapContainer.dataset.locations);
-
+export const displayMap = (locations) => {
   //create a new interactive map, and render it inside the element with id 'map'
   const map = L.map('map', {
     scrollWheelZoom: false,
@@ -48,4 +47,4 @@ if (mapContainer) {
   //instead of hardcoding fixed center
   //dynamically calc it based on tours coordinates
   map.fitBounds(bounds);
-}
+};
