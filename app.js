@@ -73,11 +73,14 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter); //apply it only to "/api"
 
-//body parser, reading data from body into req.body
-app.use(express.json());
+//parses incoming requests with JSON bodies (e.g. AJAX calls) into req.body
+app.use(express.json({ limit: '10Kb' }));
 
-//every incoming request gets a req.cookies object
+//parses the Cookie header on every incoming request into req.cookies
 app.use(cookieParser());
+
+//parses incoming requests with URL-encoded bodies (plain HTML <form> submissions) into req.body
+app.use(express.urlencoded({ extended: true, limit: '10Kb' }));
 
 //data sanitization against  NoSQL query injection
 app.use(mongoSanitize());

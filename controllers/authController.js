@@ -21,6 +21,7 @@ const createSendToken = (user, statusCode, res, data) => {
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     ),
     httpOnly: true, //cookie can't be accessed or modified by browser
+    sameSite: 'lax',
   };
   if (process.env.NODE_ENV === 'production') {
     cookieOptions.secure = true; //send over secure connections like https

@@ -20,7 +20,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   //2) filtered out unwanted fields
   const filteredData = _.pick(req.body, ['name', 'email']);
 
-  //3) update user documen
+  //3) update user document
   const options = { new: true, runValidators: true };
   const updatedUser = await User.findByIdAndUpdate(
     req.user.id,

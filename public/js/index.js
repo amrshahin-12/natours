@@ -5,7 +5,7 @@ import { displayMap } from './leafletMap';
 
 //DOM ELEMENTS
 const mapContainer = document.getElementById('map');
-const loginForm = document.querySelector('.form');
+const loginForm = document.querySelector('.form--login');
 const logoutBtn = document.querySelector('.nav__el--logout');
 
 //VALUES

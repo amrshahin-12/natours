@@ -1,6 +1,7 @@
 const { Tour } = require('../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const { User } = require('../models/userModel');
 
 exports.getOverview = catchAsync(async (req, res, next) => {
   //1) get tour data from collection
@@ -39,8 +40,27 @@ exports.getLoginForm = (req, res, next) => {
   });
 };
 
-exports.getAccount = (req, res, next) => {
+exports.getAccount = (req, res) => {
   res.status(200).render('account', {
     title: 'Your account',
   });
 };
+
+//using HTML form and action attribute
+exports.UpdateUserDataUsingHTMLForm = catchAsync(async (req, res, next) => {
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      name: req.body.name,
+      email: req.body.email,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+  res.status(200).render('account', {
+    title: 'Your account',
+    user: updatedUser, //without it "user" in the template will be from protect MW, and it's not the updated
+  });
+});
