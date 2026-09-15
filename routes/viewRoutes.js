@@ -10,10 +10,10 @@ router.get('/', authController.isLoggedIn, viewController.getOverview);
 router.get('/tour/:slug', authController.isLoggedIn, viewController.getTour);
 router.get('/login', authController.isLoggedIn, viewController.getLoginForm);
 
-router.post(
-  '/submit-user-data',
-  authController.protect,
-  viewController.UpdateUserDataUsingHTMLForm,
-);
+// router.post(
+//   '/submit-user-data',
+//   authController.protect,
+//   viewController.UpdateUserDataUsingHTMLForm,
+// );
 
 module.exports = router;

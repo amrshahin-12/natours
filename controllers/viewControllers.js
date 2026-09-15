@@ -46,21 +46,21 @@ exports.getAccount = (req, res) => {
   });
 };
 
-//using HTML form and action attribute
-exports.UpdateUserDataUsingHTMLForm = catchAsync(async (req, res, next) => {
-  const updatedUser = await User.findByIdAndUpdate(
-    req.user._id,
-    {
-      name: req.body.name,
-      email: req.body.email,
-    },
-    {
-      new: true,
-      runValidators: true,
-    },
-  );
-  res.status(200).render('account', {
-    title: 'Your account',
-    user: updatedUser, //without it "user" in the template will be from protect MW, and it's not the updated
-  });
-});
+// //using HTML form and action attribute
+// exports.UpdateUserDataUsingHTMLForm = catchAsync(async (req, res, next) => {
+//   const updatedUser = await User.findByIdAndUpdate(
+//     req.user._id,
+//     {
+//       name: req.body.name,
+//       email: req.body.email,
+//     },
+//     {
+//       new: true,
+//       runValidators: true,
+//     },
+//   );
+//   res.status(200).render('account', {
+//     title: 'Your account',
+//     user: updatedUser, //without it "user" in the template will be from protect MW, and it's not the updated
+//   });
+// });
