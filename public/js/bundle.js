@@ -27087,12 +27087,13 @@ if (logoutBtn) {
 if (userDataForm) {
   userDataForm.addEventListener('submit', function (ele) {
     ele.preventDefault();
-    var name = document.getElementById('name').value;
-    var email = document.getElementById('email').value;
-    (0, _updateSettings.updateSettings)({
-      name: name,
-      email: email
-    }, 'data');
+    //FormData instead of plain objects (which axios parses to application/json)
+    // builds a multipart/form-data body, the same wire format Multer expects on the server
+    var form = new FormData();
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]);
+    (0, _updateSettings.updateSettings)(form, 'data');
   });
 }
 if (passwordChangeForm) {

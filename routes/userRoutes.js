@@ -1,6 +1,7 @@
 const express = require('express');
 
 const router = express.Router();
+
 const userController = require('../controllers/userControllers');
 const authController = require('../controllers/authController');
 
@@ -15,7 +16,12 @@ router.use(authController.protect);
 
 router.patch('/update-password', authController.updatePassword);
 router.get('/me', userController.getMe, userController.getUser);
-router.patch('/updateMe', userController.updateMe);
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
+  userController.updateMe,
+);
 router.delete('/deleteMe', userController.deleteMe);
 
 //to restrict all comming protected routes
