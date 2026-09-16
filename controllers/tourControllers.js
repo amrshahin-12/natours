@@ -4,6 +4,7 @@ const { Tour } = require('../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
+const { validateImageBuffer } = require('../utils/validateImageBuffer');
 
 const multerStorageMemory = multer.memoryStorage(); //image stored as buffer
 
@@ -32,6 +33,7 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
   if (!req.files.imageCover || !req.files.images) return next();
 
   //1) imageCover
+  await validateImageBuffer(req.files.imageCover[0].buffer);
   req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
   await sharp(req.files.imageCover[0].buffer)
     .resize(2000, 1333)
@@ -43,6 +45,7 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
   req.body.images = [];
   await Promise.all(
     req.files.images.map(async (image, index) => {
+      await validateImageBuffer(image.buffer);
       req.body.images.push(
         `tour-${req.params.id}-${Date.now()}-image-${index}.jpeg`,
       );

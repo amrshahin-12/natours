@@ -5,6 +5,7 @@ const { User } = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
+const { validateImageBuffer } = require('../utils/validateImageBuffer');
 
 //to store files on disk
 // const multerStorageDisk = multer.diskStorage({
@@ -39,9 +40,10 @@ const upload = multer({
 exports.uploadUserPhoto = upload.single('photo');
 
 exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
-  if (!req.file) {
-    return next();
-  }
+  if (!req.file) return next();
+
+  //magic bytes validation => check if it's an image
+  await validateImageBuffer(req.file.buffer); //invalid: throws AppError -> caught by catchAsync -> global error handler
 
   //when we stored img in memory, "req.file.fileName" didn't get defined
   //so we define it here cause we will need it in "updateMe" MW
