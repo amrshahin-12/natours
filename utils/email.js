@@ -35,6 +35,7 @@ module.exports = class Email {
     const html = pug.renderFile(
       `${__dirname}/../views/emails/${template}.pug`,
       {
+        //passed variables to the template's local scope
         firstName: this.firstName,
         url: this.url,
         subject,
@@ -47,7 +48,7 @@ module.exports = class Email {
       to: this.to,
       subject,
       html,
-      text: htmlToText.fromString(html),
+      text: htmlToText.convert(html),
     };
 
     //3) Create a transport and send email
