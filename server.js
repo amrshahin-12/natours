@@ -31,7 +31,7 @@ mongoose
     console.log('DB connection successful!');
   });
 
-const port = process.env.PORT;
+const port = process.env.PORT || 8000;
 const server = app.listen(port, '127.0.0.1', () => {
   console.log('listenning...');
 });
@@ -48,13 +48,3 @@ process.on('unhandledRejection', (err) => {
     process.exit(1); //then we shut down
   });
 });
-////////////
-// const passwordChangedAt = undefined;
-// const passwordChangedAtTimestamp = parseInt(
-//   this.passwordChangedAt.getTime() / 1000,
-//   10,
-// );
-// if (this.passwordChangedAt) {
-//   console.log('in if', passwordChangedAtTimestamp);
-// }
-// console.log('out if', passwordChangedAtTimestamp);
