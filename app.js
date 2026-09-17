@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const hpp = require('hpp');
 const mongoSanitize = require('express-mongo-sanitize');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 
 const app = express(); //returns bunch of methods
 const fs = require('fs');
@@ -101,6 +102,9 @@ app.use(
     ],
   }),
 );
+
+//compress texts/ html sent to clients
+app.use(compression());
 
 //routers
 app.use('/', viewRouter);
