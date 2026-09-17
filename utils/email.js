@@ -1,4 +1,6 @@
 /* eslint-disable no-else-return */
+// const { Resend } = require('resend');
+
 const nodemailer = require('nodemailer');
 const pug = require('pug');
 const htmlToText = require('html-to-text');
@@ -8,7 +10,7 @@ module.exports = class Email {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
     this.url = url;
-    this.from = `Amr Shahin <${process.env.EMAIL_FROM}>`;
+    this.from = `Amr Shahin <${process.env.GMAIL_USER_PROD}>`;
   }
 
   newTransport() {
@@ -16,16 +18,24 @@ module.exports = class Email {
     if (process.env.NODE_ENV === 'development') {
       //SMTP server: mailtrap
       return nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
+        host: process.env.EMAIL_HOST_DEV,
+        port: process.env.EMAIL_PORT_DEV,
         auth: {
-          user: process.env.EMAIL_USERNAME,
-          pass: process.env.EMAIL_PASSWORD,
+          user: process.env.EMAIL_USERNAME_DEV,
+          pass: process.env.EMAIL_PASSWORD_DEV,
         },
       });
     } else {
-      //sendgrid
-      return 1;
+      // Production: GMAIL SMTP
+      return nodemailer.createTransport({
+        host: process.env.EMAIL_HOST_PROD,
+        port: process.env.EMAIL_PORT_PROD,
+        secure: true,
+        auth: {
+          user: process.env.GMAIL_USER_PROD,
+          pass: process.env.GMAIL_APP_PASSWORD,
+        },
+      });
     }
   }
 
@@ -66,15 +76,3 @@ module.exports = class Email {
     );
   }
 };
-
-// const sendEmail = async (options) => {
-//   //2) define the email options
-//   // const mailOptions = {
-//   //   from: 'Amr Shahin <test1@gmail.com>',
-//   //   to: options.email,
-//   //   subject: options.subject,
-//   //   text: options.message,
-//   // };
-//   //3) actually send the email
-//   // await transporter.sendMail(mailOptions);
-// };
